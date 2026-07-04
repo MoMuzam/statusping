@@ -1,5 +1,11 @@
 import urllib.request
 import time
+import boto3
+from datetime import datetime, timezone
+
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table("statusping-results")
+
 
 def check_website(url):
     start_time = time.time()
@@ -28,6 +34,13 @@ def lambda_handler(event, context):
     results = []
     for url in urls_to_check:
         result = check_website(url)
+        result["timestamp"] = datetime.now(timezone.utc).isoformat()
+
+        # DynamoDB doesn't accept None, so we swap it for a placeholder
+        if result["status_code"] is None:
+            result["status_code"] = 0
+
+        table.put_item(Item=result)
         results.append(result)
         print(result)
 
@@ -35,6 +48,7 @@ def lambda_handler(event, context):
         "statusCode": 200,
         "results": results
     }
+
 
 if __name__ == "__main__":
     fake_event = {}
