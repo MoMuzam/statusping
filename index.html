@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StatusPing</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #0e1116;
+      color: #e6e6e6;
+      padding: 40px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #1a1f26;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      border-left: 5px solid gray;
+    }
+    .up {
+      border-left-color: #2ecc71;
+    }
+    .down {
+      border-left-color: #e74c3c;
+    }
+    .url {
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .details {
+      color: #999;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>StatusPing</h1>
+  <div id="status-container">Loading...</div>
+
+  <script>
+  const API_URL = "https://4y67wgelvk.execute-api.us-east-1.amazonaws.com/status";
+
+  async function loadStatus() {
+    const container = document.getElementById("status-container");
+
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+
+      container.innerHTML = "";
+
+      data.forEach(site => {
+        const isUp = site.status_code === 200;
+        const card = document.createElement("div");
+        card.className = "card " + (isUp ? "up" : "down");
+
+        const time = new Date(site.timestamp).toLocaleString();
+
+        card.innerHTML = `
+          <div class="url">${site.url}</div>
+          <div class="details">
+            Status: ${isUp ? "Up" : "Down"} (${site.status_code})
+            · ${site.response_time_ms}ms
+            · Last checked: ${time}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+    } catch (error) {
+      container.innerHTML = "Failed to load status data.";
+      console.error(error);
+    }
+  }
+
+  loadStatus();
+</script>
+</body>
+</html>
